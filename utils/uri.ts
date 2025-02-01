@@ -1,16 +1,13 @@
 type UriComponent = string | number | boolean;
 type UriComponentRecord = Record<string, UriComponent>;
 
-/** Test method for verifying path typing. */
-const pathTest = (s: `/${string}`) => s;
-
 /** Encode search params
  * @example searchParamUtil({
 		userId: 2,
 		active: false,
 	}); //->"userId=2&active=false"
 */
-const searchParamUtil = (params: UriComponentRecord) =>
+export const searchParamUtil = (params: UriComponentRecord) =>
 	Object.entries(params)
 		.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
 		.join('&');
@@ -20,16 +17,14 @@ const searchParamUtil = (params: UriComponentRecord) =>
  * 	The prefix is only for potential external type requirements.
  * @example pathUtil`/users/${1}?${{active:false}}` //->"/users/123"
  */
-const uriUtil = <TPrefix extends string = '/'>(
+export const uriUtil = <TPrefix extends string = '/'>(
 	parts: TemplateStringsArray,
 	...params: Readonly<UriComponent | UriComponentRecord>[]
 ): `${TPrefix}${string}` =>
 	String.raw(
 		parts,
 		...params.map((x) =>
-			x instanceof Object
-				? searchParamUtil(x)
-				: encodeURIComponent(`${x}`)
+			x instanceof Object ? searchParamUtil(x) : encodeURIComponent(x)
 		)
 	) as `${TPrefix}${string}`;
 
@@ -40,7 +35,7 @@ const uriUtil = <TPrefix extends string = '/'>(
 		searchParams: { active: false },
 	}) //->"/users/1?active=false"
  */
-const pathUtil = <TPrefix extends string = '/'>({
+export const pathUtil = <TPrefix extends string = '/'>({
 	path,
 	params = {},
 	searchParams = {},
