@@ -12,6 +12,7 @@ type Headers = {
 
 type FetchConfig = {
 	headers?: Headers;
+	body?: Record<string, any> | FormData;
 };
 
 type ApiEndpoint = (
@@ -42,10 +43,10 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 }) {
 	const baseUrl = _baseUrl.endsWith('/') ? _baseUrl.slice(0, -1) : _baseUrl;
 
-    /**
-     * Fetch wrapper
-     * @throws {Response} if response is not ok
-     */
+	/**
+	 * Fetch wrapper
+	 * @throws {Response} if response is not ok
+	 */
 	async function _fetch(
 		method: Method,
 		endpoint: `/${string}`,
@@ -54,12 +55,19 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 		const res = await fetch(`${baseUrl}${endpoint}`, {
 			method,
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type':
+					options.body instanceof FormData
+						? 'application/x-www-form-urlencoded'
+						: 'application/json',
 				...options.headers,
 			} satisfies Headers,
+			body: !options.body
+				? undefined
+				: options.body instanceof FormData
+				? options.body
+				: JSON.stringify(options.body),
 		});
-        if (!res.ok)
-            throw res;
+		if (!res.ok) throw res;
 		return res;
 	}
 
@@ -67,7 +75,7 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 		baseUrl,
 		meta,
 		api: {
-            delete: (endpoint, options) => _fetch('delete', endpoint, options),
+			delete: (endpoint, options) => _fetch('delete', endpoint, options),
 			get: (endpoint, options) => _fetch('get', endpoint, options),
 			post: (endpoint, options) => _fetch('post', endpoint, options),
 			put: (endpoint, options) => _fetch('put', endpoint, options),

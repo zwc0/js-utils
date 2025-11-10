@@ -11,7 +11,7 @@ const client = createApiClient({
 			const res = await api.get(
 				uriUtil`/vehicles/decodevinvalues/${vin}?format=json`
 			);
-            const json = await res.json();
+			const json = await res.json();
 			return json.Results[0] as string;
 		},
 	}),
