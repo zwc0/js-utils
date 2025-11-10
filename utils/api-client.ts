@@ -11,8 +11,10 @@ type Headers = {
 };
 
 type FetchConfig = {
-	headers?: Headers;
 	body?: Record<string, any> | FormData;
+	headers?: Headers;
+	/** @default 'bearer' */
+	tokenType?: 'basic' | 'bearer' | 'none';
 };
 
 type ApiEndpoint = (
@@ -22,24 +24,36 @@ type ApiEndpoint = (
 
 type Api = Record<Method, ApiEndpoint>;
 
+type BearerGetSet = [
+	getBearerToken: () => string | Promise<string>,
+	setBearerToken: (token: string) => any | Promise<any>
+];
+
 type EndpointConfig<T, Meta extends Record<string, any>> = ({
 	baseUrl,
 	meta,
 	api,
 }: {
 	baseUrl: string;
+	bearer: BearerGetSet;
 	meta: Meta;
 	api: Api;
 }) => T;
 
 export function createApiClient<T, Meta extends Record<string, any> = {}>({
 	baseUrl: _baseUrl,
+	basicToken: _basicToken = () => '',
+	bearer: [getBearerToken, setBearerToken] = [() => '', () => ''],
 	endpoints,
 	meta = {} as Meta,
+	staticHeaders = {},
 }: {
 	baseUrl: string;
+	basicToken?: () => string | Promise<string>;
+	bearer?: BearerGetSet;
 	endpoints: EndpointConfig<T, Meta>;
 	meta?: Meta;
+	staticHeaders?: Headers;
 }) {
 	const baseUrl = _baseUrl.endsWith('/') ? _baseUrl.slice(0, -1) : _baseUrl;
 
@@ -55,10 +69,17 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 		const res = await fetch(`${baseUrl}${endpoint}`, {
 			method,
 			headers: {
+				Authorization:
+					options.tokenType === 'none'
+						? ''
+						: options.tokenType === 'basic'
+						? `Basic ${await _basicToken()}`
+						: `Bearer ${await getBearerToken()}`,
 				'Content-Type':
 					options.body instanceof FormData
 						? 'application/x-www-form-urlencoded'
 						: 'application/json',
+				...staticHeaders,
 				...options.headers,
 			} satisfies Headers,
 			body: !options.body
@@ -73,6 +94,7 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 
 	return endpoints({
 		baseUrl,
+		bearer: [getBearerToken, setBearerToken],
 		meta,
 		api: {
 			delete: (endpoint, options) => _fetch('delete', endpoint, options),
