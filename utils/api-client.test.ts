@@ -21,19 +21,22 @@ const client = createApiClient({
 		'X-Api-Key': '123',
 	},
 	endpoints: ({ api, bearer: [, setBearerToken], meta }) => ({
-		login: async () => {
+		login: async (signal?: AbortSignal) => {
 			const res = await api.get(uriUtil`/account/login`, {
 				body: {
 					username: 'apple',
 					password: 'pear',
 				},
+				tokenType: 'basic',
+				signal,
 			});
 			const json = await res.json();
 			setBearerToken(json.access_token);
 		},
-		decodeVin: async (vin: string) => {
+		decodeVin: async (vin: string, signal?: AbortSignal) => {
 			const res = await api.get(
-				uriUtil`/vehicles/decodevinvalues/${vin}?format=json`
+				uriUtil`/vehicles/decodevinvalues/${vin}?format=json`,
+				{ signal }
 			);
 			const json = await res.json();
 			return json.Results[0] as string;

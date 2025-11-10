@@ -12,7 +12,10 @@ type Headers = {
 
 type FetchConfig = {
 	body?: Record<string, any> | FormData;
+	/** @default 'include' */
+	credentials?: RequestCredentials;
 	headers?: Headers;
+	signal?: AbortSignal;
 	/** @default 'bearer' */
 	tokenType?: 'basic' | 'bearer' | 'none';
 };
@@ -67,6 +70,12 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 		options: FetchConfig = {}
 	) {
 		const res = await fetch(`${baseUrl}${endpoint}`, {
+			body: !options.body
+				? undefined
+				: options.body instanceof FormData
+				? options.body
+				: JSON.stringify(options.body),
+			credentials: options.credentials ?? 'include',
 			method,
 			headers: {
 				Authorization:
@@ -82,11 +91,7 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 				...staticHeaders,
 				...options.headers,
 			} satisfies Headers,
-			body: !options.body
-				? undefined
-				: options.body instanceof FormData
-				? options.body
-				: JSON.stringify(options.body),
+            signal: options.signal,
 		});
 		if (!res.ok) throw res;
 		return res;
