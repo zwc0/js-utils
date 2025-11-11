@@ -43,6 +43,26 @@ type EndpointConfig<T, Meta extends Record<string, any>> = ({
 	api: Api;
 }) => T;
 
+type ApiClientOptions<T, Meta extends Record<string, any> = {}> = {
+	baseUrl: string;
+	basicToken?: () => string | Promise<string>;
+	bearer?: BearerGetSet;
+	endpoints: EndpointConfig<T, Meta>;
+	meta?: Meta;
+	staticHeaders?: Headers;
+};
+
+// note: not sure if there's a better way of handling the types
+// but did the combo of the Partial and Options for the param to enable types for the Meta object
+// while ensuring that the result is a const of the input rather than a generic, unknown partial.
+export const apiClientOptions = <
+	T,
+	Meta extends Record<string, any> = {},
+	const Options extends Partial<ApiClientOptions<T, Meta>> = {}
+>(
+	options: Partial<ApiClientOptions<T, Meta>> & Options
+) => options as Options;
+
 export function createApiClient<T, Meta extends Record<string, any> = {}>({
 	baseUrl: _baseUrl,
 	basicToken: _basicToken = () => '',
@@ -50,14 +70,7 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 	endpoints,
 	meta = {} as Meta,
 	staticHeaders = {},
-}: {
-	baseUrl: string;
-	basicToken?: () => string | Promise<string>;
-	bearer?: BearerGetSet;
-	endpoints: EndpointConfig<T, Meta>;
-	meta?: Meta;
-	staticHeaders?: Headers;
-}) {
+}: ApiClientOptions<T, Meta>) {
 	const baseUrl = _baseUrl.endsWith('/') ? _baseUrl.slice(0, -1) : _baseUrl;
 
 	/**
@@ -91,7 +104,7 @@ export function createApiClient<T, Meta extends Record<string, any> = {}>({
 				...staticHeaders,
 				...options.headers,
 			} satisfies Headers,
-            signal: options.signal,
+			signal: options.signal,
 		});
 		if (!res.ok) throw res;
 		return res;
