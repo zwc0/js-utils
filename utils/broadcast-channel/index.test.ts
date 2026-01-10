@@ -1,6 +1,14 @@
 import { subscribe } from '.';
 
-const [postMessage, unsubscribe] = subscribe<{ a: number }>('key', {
+declare global {
+	interface BroadcastChannelMap {
+		key: {
+			a: number;
+		};
+	}
+}
+
+const [postMessage, unsubscribe] = subscribe('key', {
 	onMessage: (e) => {
 		e.data.a;
 	},

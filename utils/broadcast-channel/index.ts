@@ -1,3 +1,7 @@
+declare global {
+	interface BroadcastChannelMap {}
+}
+
 export type BroadcastChannelEventHandler<MessageData> = (
 	event: MessageEvent<MessageData>
 ) => void;
@@ -25,8 +29,11 @@ const getOrCreateChannelRecord = (name: string) => {
 	return channelRecord;
 };
 
-export const subscribe = <MessageData = unknown>(
-	name: string,
+export const subscribe = <
+	Name extends keyof BroadcastChannelMap,
+	MessageData = BroadcastChannelMap[Name]
+>(
+	name: Name,
 	options: BroadcastChannelRecordOptions<MessageData>
 ) => {
 	const channelRecord = getOrCreateChannelRecord(name);
