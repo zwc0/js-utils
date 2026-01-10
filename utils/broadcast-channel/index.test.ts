@@ -8,9 +8,9 @@ declare global {
 	}
 }
 
-const [postMessage, unsubscribe] = subscribe('key', {
+const [unsubscribe, postMessage] = subscribe('key', {
 	onMessage: (e) => {
-		e.data.a;
+		console.log(e.data.a);
 	},
 });
 

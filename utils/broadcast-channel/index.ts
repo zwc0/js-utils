@@ -47,10 +47,10 @@ export const subscribe = <
 		);
 
 	return [
-		channelRecord.channel.postMessage as (data: MessageData) => void,
 		() => {
 			unsubscribe<MessageData>(name, options);
 		},
+		channelRecord.channel.postMessage as (data: MessageData) => void,
 	] as const;
 };
 
